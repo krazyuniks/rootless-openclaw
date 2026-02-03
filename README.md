@@ -61,8 +61,8 @@ OpenClaw is an AI assistant that executes code and commands on your server. Runn
 
 ```bash
 # Clone and run installer
-git clone https://github.com/krazyuniks/rootless-openclaw.git /tmp/rootless-openclaw
-cd /tmp/rootless-openclaw
+git clone https://github.com/krazyuniks/rootless-docker-openclaw.git /tmp/rootless-docker-openclaw
+cd /tmp/rootless-docker-openclaw
 sudo ./install.sh
 ```
 
@@ -88,7 +88,7 @@ After installation, the complete structure is:
 │   ├── agents/                        # AI agents
 │   └── ...
 │
-├── rootless-openclaw/                  # This deployment repo
+├── rootless-docker-openclaw/           # This deployment repo
 │   ├── install.sh                     # Main installer (chains all scripts)
 │   ├── README.md                      # This file
 │   ├── .gitignore
@@ -235,7 +235,7 @@ sudo -u openclaw docker logs -f openclaw-gateway
 ### Restart Gateway
 
 ```bash
-cd /home/openclaw/rootless-openclaw
+cd /home/openclaw/rootless-docker-openclaw
 sudo ./scripts/05-start.sh
 ```
 
@@ -245,7 +245,7 @@ sudo ./scripts/05-start.sh
 cd /home/openclaw/openclaw
 sudo -u openclaw git pull
 ./docker-setup.sh
-sudo ../rootless-openclaw/scripts/05-start.sh
+sudo ../rootless-docker-openclaw/scripts/05-start.sh
 ```
 
 ## Firewall (nftables + Docker)
@@ -390,7 +390,7 @@ sudo -u openclaw docker rm -f openclaw-gateway
 sudo rm -rf /home/openclaw/.openclaw
 
 # Re-run installer
-cd /home/openclaw/rootless-openclaw
+cd /home/openclaw/rootless-docker-openclaw
 sudo ./install.sh
 ```
 
@@ -399,7 +399,7 @@ sudo ./install.sh
 | Location | Purpose | Owner |
 |----------|---------|-------|
 | `/home/openclaw/openclaw/` | OpenClaw source (upstream) | openclaw |
-| `/home/openclaw/rootless-openclaw/` | This deployment repo | openclaw |
+| `/home/openclaw/rootless-docker-openclaw/` | This deployment repo | openclaw |
 | `/home/openclaw/.openclaw/` | Runtime config and workspace | Mapped UID |
 | `/home/openclaw/.openclaw/openclaw.json` | Gateway configuration | Mapped UID |
 

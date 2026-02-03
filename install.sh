@@ -3,8 +3,8 @@
 # Rootless OpenClaw Deployment Installer
 #
 # Usage:
-#   git clone https://github.com/krazyuniks/rootless-openclaw.git /tmp/rootless-openclaw
-#   cd /tmp/rootless-openclaw
+#   git clone https://github.com/krazyuniks/rootless-docker-openclaw.git /tmp/rootless-docker-openclaw
+#   cd /tmp/rootless-docker-openclaw
 #   sudo ./install.sh
 #
 
@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Configurable username (default: openclaw)
 OPENCLAW_USER="${OPENCLAW_USER:-openclaw}"
 export OPENCLAW_USER
-DEPLOY_DIR="/home/$OPENCLAW_USER/rootless-openclaw"
+DEPLOY_DIR="/home/$OPENCLAW_USER/rootless-docker-openclaw"
 
 echo "==================================="
 echo " Rootless OpenClaw Deployment"
