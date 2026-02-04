@@ -10,6 +10,14 @@ IMAGE_NAME="openclaw:local"
 CONTAINER_NAME="openclaw-gateway"
 PORT=18789
 
+# Load API keys from env file if it exists
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENV_FILE="$SCRIPT_DIR/.env"
+[ -f "$ENV_FILE" ] && source "$ENV_FILE"
+
+# Optional API keys (set these in environment, env file, or edit here)
+BRAVE_API_KEY="${BRAVE_API_KEY:-}"
+
 # Use sudo only if not running as the target user
 if [ "$(whoami)" = "$USER" ]; then
     SUDO=""
@@ -29,11 +37,16 @@ if $DOCKER ps -aq -f name="$CONTAINER_NAME" | grep -q .; then
     $DOCKER rm -f "$CONTAINER_NAME"
 fi
 
+# Build environment variable flags
+ENV_FLAGS=""
+[ -n "$BRAVE_API_KEY" ] && ENV_FLAGS="$ENV_FLAGS -e BRAVE_API_KEY=$BRAVE_API_KEY"
+
 # Start gateway
 echo "==> Starting gateway on port $PORT..."
 $DOCKER run -d --rm \
     -p "$PORT:$PORT" \
     -v "/home/$USER/.openclaw:/home/node/.openclaw" \
+    $ENV_FLAGS \
     --name "$CONTAINER_NAME" \
     "$IMAGE_NAME" \
     node dist/index.js gateway --bind lan
