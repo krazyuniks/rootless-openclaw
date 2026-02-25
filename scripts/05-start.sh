@@ -17,11 +17,9 @@ ENV_FILE="/home/$USER/.openclaw/.env"
 if [ "$(whoami)" = "$USER" ]; then
     SUDO=""
     DOCKER="docker"
-    SUDO_CAT="cat"
 else
     SUDO="sudo -u $USER"
     DOCKER="sudo -u $USER docker"
-    SUDO_CAT="sudo cat"
 fi
 
 echo "==> Starting OpenClaw gateway"
@@ -32,6 +30,13 @@ if $DOCKER ps -aq -f name="$CONTAINER_NAME" | grep -q .; then
     $DOCKER rm -f "$CONTAINER_NAME"
 fi
 
+# Remove stale session lock files from previous container
+LOCK_FILES=$(find "/home/$USER/.openclaw" -name '*.lock' -type f 2>/dev/null || true)
+if [ -n "$LOCK_FILES" ]; then
+    echo "==> Removing stale lock files..."
+    echo "$LOCK_FILES" | while read -r f; do rm -f "$f"; done
+fi
+
 # Build environment variable flags
 ENV_FLAGS=""
 [ -f "$ENV_FILE" ] && ENV_FLAGS="--env-file $ENV_FILE"
@@ -39,8 +44,9 @@ ENV_FLAGS=""
 # Start gateway
 echo "==> Starting gateway on port $PORT..."
 $DOCKER run -d --rm \
-    -p "$PORT:$PORT" \
+    -p "127.0.0.1:$PORT:$PORT" \
     -v "/home/$USER/.openclaw:/home/node/.openclaw" \
+    --log-opt max-size=50m --log-opt max-file=3 \
     $ENV_FLAGS \
     --name "$CONTAINER_NAME" \
     "$IMAGE_NAME" \
@@ -50,9 +56,11 @@ echo ""
 echo "✓ Gateway started"
 echo ""
 
-# Extract and display the auth token
-TOKEN=$($DOCKER run --rm -v "/home/$USER/.openclaw:/home/node/.openclaw" "$IMAGE_NAME" \
-    node -e "const c = require('/home/node/.openclaw/openclaw.json'); console.log(c.gateway.auth.token)" 2>/dev/null)
+# Extract and display the auth token (from .env or openclaw.json)
+TOKEN=""
+if [ -f "$ENV_FILE" ]; then
+    TOKEN=$(grep -m1 '^OPENCLAW_GATEWAY_TOKEN=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)
+fi
 
 if [ -n "$TOKEN" ]; then
     echo "==> Your auth token:"
@@ -61,8 +69,8 @@ if [ -n "$TOKEN" ]; then
     echo "==> Access dashboard at:"
     echo "http://127.0.0.1:$PORT/?token=$TOKEN"
 else
-    echo "==> Get your auth token:"
-    echo "$SUDO_CAT /home/$USER/.openclaw/openclaw.json | jq -r '.gateway.auth.token'"
+    echo "==> Auth token not found in $ENV_FILE"
+    echo "    Set OPENCLAW_GATEWAY_TOKEN in $ENV_FILE"
     echo ""
     echo "==> Access dashboard at:"
     echo "http://127.0.0.1:$PORT/?token=<your-token>"

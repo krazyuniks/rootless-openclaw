@@ -7,7 +7,6 @@ set -e
 
 USER="${OPENCLAW_USER:-openclaw}"
 CONTAINER_NAME="openclaw-gateway"
-IMAGE_NAME="openclaw:local"
 PORT=18789
 
 # Colours
@@ -50,17 +49,19 @@ echo ""
 echo -e "${BLUE}==> Auth Token${NC}"
 echo ""
 
-# Get token
-TOKEN=$($DOCKER run --rm -v "/home/$USER/.openclaw:/home/node/.openclaw" "$IMAGE_NAME" \
-    node -e "const c = require('/home/node/.openclaw/openclaw.json'); console.log(c.gateway.auth.token)" 2>/dev/null || true)
+# Get token from .env
+ENV_FILE="/home/$USER/.openclaw/.env"
+TOKEN=""
+if [ -f "$ENV_FILE" ]; then
+    TOKEN=$(grep -m1 '^OPENCLAW_GATEWAY_TOKEN=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)
+fi
 
 if [ -n "$TOKEN" ]; then
     echo "$TOKEN"
 else
-    echo -e "${YELLOW}Could not retrieve token automatically${NC}"
+    echo -e "${YELLOW}Could not retrieve token${NC}"
     echo ""
-    echo "Manual command:"
-    echo "  sudo cat /home/$USER/.openclaw/openclaw.json | jq -r '.gateway.auth.token'"
+    echo "Set OPENCLAW_GATEWAY_TOKEN in $ENV_FILE"
 fi
 
 echo ""
