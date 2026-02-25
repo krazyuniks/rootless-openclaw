@@ -31,7 +31,7 @@ The `-E` flag preserves your environment (including Claude auth credentials from
 | `scripts/04-openclaw.sh` | Clone repo, create dirs, run onboarding |
 | `scripts/05-start.sh` | Stop/start gateway container |
 | `scripts/info.sh` | Show service status, token, and connection info |
-| `scripts/sync-anthropic-token.sh` | Sync Anthropic OAuth token from Claude CLI into agent auth profiles |
+| `scripts/sync-oauth-tokens.sh` | Sync Anthropic + Gemini OAuth tokens into agent auth profiles |
 
 ## UID mapping
 
@@ -42,13 +42,19 @@ The `-E` flag preserves your environment (including Claude auth credentials from
 
 All files in `/home/openclaw/.openclaw/` must be owned by `166535:166535`. ACLs grant `openclaw` and `ryan` access.
 
-## Anthropic OAuth
+## OAuth Token Sync
 
-OpenClaw uses Anthropic OAuth tokens from the Claude CLI, stored as `api_key` type in agent auth profiles. The access token from `/home/ryan/.claude/.credentials.json` is synced into `/home/openclaw/.openclaw/agents/*/agent/auth-profiles.json`.
+OpenClaw uses OAuth tokens from host CLI tools, stored as `api_key` type in agent auth profiles:
 
-- **Sync script**: `scripts/sync-anthropic-token.sh` (run as root via cron)
-- **Cron** (root): `0 */6 * * * /home/openclaw/rootless-openclaw/scripts/sync-anthropic-token.sh >> /tmp/openclaw-token-sync.log 2>&1`
-- **Token lifespan**: ~30 days. Refreshed each time Claude Code runs. If ryan hasn't used Claude Code in 30 days, tokens expire.
+- **Anthropic**: from Claude CLI (`/home/ryan/.claude/.credentials.json`)
+- **Google Gemini CLI**: from Gemini CLI (`/home/ryan/.gemini/oauth_creds.json`)
+- **ZAI**: API key only (no OAuth), stored directly in auth profiles
+
+Tokens are synced into `/home/openclaw/.openclaw/agents/*/agent/auth-profiles.json`.
+
+- **Sync script**: `scripts/sync-oauth-tokens.sh` (run as root via cron)
+- **Cron** (root): `0 */6 * * * /home/openclaw/rootless-openclaw/scripts/sync-oauth-tokens.sh >> /tmp/openclaw-token-sync.log 2>&1`
+- **Token lifespan**: ~30 days. Refreshed each time the respective CLI runs on the host.
 - **Format**: stored as `"type": "api_key"` with the OAuth access token as `"key"` — OpenClaw doesn't support native OAuth format.
 
 ## Upgrading
